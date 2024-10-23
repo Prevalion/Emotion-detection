@@ -44,7 +44,6 @@ def plot_model_history(model_history):
 # Define data generators
 train_dir = 'data/train'
 val_dir = 'data/test'
-
 num_train = 28709
 num_val = 7178
 batch_size = 64
@@ -80,6 +79,10 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
+
+# Adding two extra layers
+model.add(Dense(512, activation='relu'))  # New Dense layer
+model.add(Dropout(0.3))                   # New Dropout layer
 
 model.add(Flatten())
 model.add(Dense(1024, activation='relu'))
