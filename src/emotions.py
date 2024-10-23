@@ -10,6 +10,7 @@ from tensorflow.keras.layers import MaxPooling2D # type: ignore
 from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore
 
 # command line argument
 ap = argparse.ArgumentParser()
@@ -47,7 +48,7 @@ val_dir = 'data/test'
 num_train = 28709
 num_val = 7178
 batch_size = 64
-num_epoch = 100
+num_epoch = 50
 
 train_datagen = ImageDataGenerator(rescale=1./255)
 val_datagen = ImageDataGenerator(rescale=1./255)
@@ -80,30 +81,36 @@ model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
-# Adding two extra layers
-model.add(Dense(512, activation='relu'))  # New Dense layer
-model.add(Dropout(0.3))                   # New Dropout layer
-
 model.add(Flatten())
 model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(7, activation='softmax'))
 
+# Define a learning rate schedule function
+def lr_schedule(epoch, lr):
+    decay_rate = 0.1
+    decay_step = 10
+    if epoch % decay_step == 0 and epoch:
+        return lr * decay_rate
+    return lr
+
 # If you want to train the same model or try other models, go for this
 if mode == "train":
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
+    lr_scheduler = LearningRateScheduler(lr_schedule)
     model_info = model.fit(
             train_generator,
             steps_per_epoch=num_train // batch_size,
             epochs=num_epoch,
             validation_data=validation_generator,
-            validation_steps=num_val // batch_size)
+            validation_steps=num_val // batch_size,
+            callbacks=[lr_scheduler])  # Add the learning rate scheduler to callbacks
     plot_model_history(model_info)
-    model.save_weights('model.h5')  # Updated filename to comply with the new requirement
+    model.save_weights('model.weights.h5')  # Updated filename to comply with the new requirement
 
 # emotions will be displayed on your face from the webcam feed
 elif mode == "display":
-    model.load_weights('model.h5')
+    model.load_weights('model.weights.h5')
 
     # prevents openCL usage and unnecessary logging messages
     cv2.ocl.setUseOpenCL(False)
