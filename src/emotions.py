@@ -8,6 +8,7 @@ from tensorflow.keras.layers import Conv2D # type: ignore
 from tensorflow.keras.optimizers import Adam # type: ignore
 from tensorflow.keras.layers import MaxPooling2D # type: ignore
 from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore
+from tensorflow.contrib.keras.python.keras.regularizers import l1, l2 # type: ignore
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore
@@ -82,7 +83,7 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 model.add(Flatten())
-model.add(Dense(1024, activation='relu'))
+model.add(Dense(1024, activation='relu', kernel_regularizer=l2(0.001)))
 model.add(Dropout(0.5))
 model.add(Dense(7, activation='softmax'))
 

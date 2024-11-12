@@ -9,7 +9,7 @@ if face_cascade.empty():
     print(f"Error: Unable to load Haar Cascade file at {cascade_path}. Please check the file path and ensure the file exists.")
 else:
     # Load the image
-    image_path = 'C:/Users/MedAyoub/Desktop/face/Emotion-detection/src/data/test/angry/35669.jpg'
+    image_path = 'C:/Users/MedAyoub/Desktop/face/Emotion-detection/src/data/test/angry/fer0028678.png'
     image = cv2.imread(image_path)
 
     # Check if the image was loaded successfully
