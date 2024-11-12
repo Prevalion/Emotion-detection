@@ -8,7 +8,7 @@ from tensorflow.keras.layers import Conv2D # type: ignore
 from tensorflow.keras.optimizers import Adam # type: ignore
 from tensorflow.keras.layers import MaxPooling2D # type: ignore
 from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore
-from tensorflow.contrib.keras.python.keras.regularizers import l1, l2 # type: ignore
+from tensorflow.contrib.keras.python.keras.regularizers import l2 # type: ignore
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore
