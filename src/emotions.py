@@ -46,7 +46,6 @@ def plot_model_history(model_history):
 # Define data generators
 train_dir = 'data/train'
 val_dir = 'data/test'
-nub_all=97327
 num_train = 70007
 num_val = 27319
 batch_size = 64
