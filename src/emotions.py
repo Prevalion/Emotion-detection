@@ -11,7 +11,8 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: igno
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore
-
+from tensorflow.keras.regularizers import l2  # Import L2 regularization #type: ignore
+from tensorflow.keras.callbacks import EarlyStopping  # Import EarlyStopping #type: ignore
 # command line argument
 ap = argparse.ArgumentParser()
 ap.add_argument("--mode",help="train/display")
@@ -45,9 +46,9 @@ def plot_model_history(model_history):
 # Define data generators
 train_dir = 'data/train'
 val_dir = 'data/test'
-num_train = 70007
+num_train = 69888
 num_val = 27319
-batch_size = 128
+batch_size = 256  # Increased batch size
 num_epoch = 100
 
 train_datagen = ImageDataGenerator(rescale=1./255)
@@ -67,6 +68,10 @@ validation_generator = val_datagen.flow_from_directory(
         color_mode="grayscale",
         class_mode='categorical')
 
+# Ensure steps_per_epoch is calculated correctly
+steps_per_epoch = num_train // batch_size  # Ensure this is correct
+validation_steps = num_val // batch_size  # Ensure this is correct
+
 # Create the model
 model = Sequential()
 
@@ -82,9 +87,9 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 model.add(Flatten())
-model.add(Dense(1024, activation='relu'))
+model.add(Dense(1024, activation='relu', kernel_regularizer=l2(0.01)))  # Added L2 regularization
 model.add(Dropout(0.5))
-model.add(Dense(7, activation='softmax'))
+model.add(Dense(7, activation='softmax', kernel_regularizer=l2(0.01)))  # Added L2 regularization
 
 # Define a learning rate schedule function
 def lr_schedule(epoch, lr):
@@ -96,15 +101,16 @@ def lr_schedule(epoch, lr):
 
 # If you want to train the same model or try other models, go for this
 if mode == "train":
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00005), metrics=['accuracy'])  # Lowered learning rate
     lr_scheduler = LearningRateScheduler(lr_schedule)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)  # Early stopping callback
     model_info = model.fit(
             train_generator,
-            steps_per_epoch=num_train // batch_size,
+            steps_per_epoch=steps_per_epoch,  # Use the calculated value
             epochs=num_epoch,
             validation_data=validation_generator,
-            validation_steps=num_val // batch_size,
-            callbacks=[lr_scheduler])  # Add the learning rate scheduler to callbacks
+            validation_steps=validation_steps,  # Use the calculated value
+            callbacks=[lr_scheduler, early_stopping])  # Added early stopping to callbacks
     plot_model_history(model_info)
     model.save_weights('model.weights.h5')  # Updated filename to comply with the new requirement
 
