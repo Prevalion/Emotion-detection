@@ -7,12 +7,11 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten # type: ignore
 from tensorflow.keras.layers import Conv2D # type: ignore
 from tensorflow.keras.optimizers import Adam # type: ignore
 from tensorflow.keras.layers import MaxPooling2D # type: ignore
-from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore
+from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore 
+from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore  
 from tensorflow.keras.regularizers import l2  # Import L2 regularization #type: ignore
 from tensorflow.keras.callbacks import EarlyStopping  # Import EarlyStopping #type: ignore
+
 # command line argument
 ap = argparse.ArgumentParser()
 ap.add_argument("--mode",help="train/display")
@@ -20,10 +19,8 @@ mode = ap.parse_args().mode
 
 # plots accuracy and loss curves
 def plot_model_history(model_history):
-    """
-    Plot Accuracy and Loss curves given the model_history
-    """
     fig, axs = plt.subplots(1,2,figsize=(15,5))
+
     # summarize history for accuracy
     axs[0].plot(range(1,len(model_history.history['accuracy'])+1),model_history.history['accuracy'])
     axs[0].plot(range(1,len(model_history.history['val_accuracy'])+1),model_history.history['val_accuracy'])
@@ -32,6 +29,7 @@ def plot_model_history(model_history):
     axs[0].set_xlabel('Epoch')
     axs[0].set_xticks(np.arange(1, len(model_history.history['accuracy']) + 1, len(model_history.history['accuracy']) // 10))  # Corrected line
     axs[0].legend(['train', 'val'], loc='best')
+
     # summarize history for loss
     axs[1].plot(range(1,len(model_history.history['loss'])+1),model_history.history['loss'])
     axs[1].plot(range(1,len(model_history.history['val_loss'])+1),model_history.history['val_loss'])
@@ -40,6 +38,7 @@ def plot_model_history(model_history):
     axs[1].set_xlabel('Epoch')
     axs[1].set_xticks(np.arange(1, len(model_history.history['loss']) + 1, len(model_history.history['loss']) // 10))  # Corrected line
     axs[1].legend(['train', 'val'], loc='best')
+
     fig.savefig('plot.png')
     plt.show()
 
@@ -59,16 +58,20 @@ train_generator = train_datagen.flow_from_directory(
         target_size=(48,48),
         batch_size=batch_size,
         color_mode="grayscale",
-        class_mode='categorical')
+        class_mode='categorical'
+        )
 
 validation_generator = val_datagen.flow_from_directory(
         val_dir,
         target_size=(48,48),
         batch_size=batch_size,
         color_mode="grayscale",
-        class_mode='categorical')
+        class_mode='categorical'
+        )
 
 # Ensure steps_per_epoch is calculated correctly
+num_train = train_generator.samples  # Get the number of training samples
+num_val = validation_generator.samples  # Get the number of validation samples
 steps_per_epoch = num_train // batch_size  # Ensure this is correct
 validation_steps = num_val // batch_size  # Ensure this is correct
 
@@ -99,20 +102,19 @@ def lr_schedule(epoch, lr):
         return lr * decay_rate
     return lr
 
-# If you want to train the same model or try other models, go for this
 if mode == "train":
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00005), metrics=['accuracy'])  # Lowered learning rate
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00005), metrics=['accuracy'])  
     lr_scheduler = LearningRateScheduler(lr_schedule)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)  # Early stopping callback
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     model_info = model.fit(
             train_generator,
-            steps_per_epoch=steps_per_epoch,  # Use the calculated value
+            steps_per_epoch=steps_per_epoch, 
             epochs=num_epoch,
             validation_data=validation_generator,
-            validation_steps=validation_steps,  # Use the calculated value
-            callbacks=[lr_scheduler, early_stopping])  # Added early stopping to callbacks
+            validation_steps=validation_steps, 
+            callbacks=[lr_scheduler, early_stopping]) 
     plot_model_history(model_info)
-    model.save_weights('model.weights.h5')  # Updated filename to comply with the new requirement
+    model.save_weights('model.weights.h5')  
 
 # emotions will be displayed on your face from the webcam feed
 elif mode == "display":
