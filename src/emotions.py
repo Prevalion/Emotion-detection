@@ -47,7 +47,7 @@ train_dir = 'data/train'
 val_dir = 'data/test'
 num_train = 69888
 num_val = 27319
-batch_size = 256  # Increased batch size
+batch_size = 256 
 num_epoch = 100
 
 train_datagen = ImageDataGenerator(rescale=1./255)
@@ -70,10 +70,10 @@ validation_generator = val_datagen.flow_from_directory(
         )
 
 # Ensure steps_per_epoch is calculated correctly
-num_train = train_generator.samples  # Get the number of training samples
-num_val = validation_generator.samples  # Get the number of validation samples
-steps_per_epoch = num_train // batch_size  # Ensure this is correct
-validation_steps = num_val // batch_size  # Ensure this is correct
+num_train = train_generator.samples  
+num_val = validation_generator.samples  
+steps_per_epoch = num_train // batch_size 
+validation_steps = num_val // batch_size 
 
 # Create the model
 model = Sequential()
@@ -90,9 +90,9 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 model.add(Flatten())
-model.add(Dense(1024, activation='relu', kernel_regularizer=l2(0.01)))  # Added L2 regularization
+model.add(Dense(1024, activation='relu', kernel_regularizer=l2(0.01))) 
 model.add(Dropout(0.5))
-model.add(Dense(7, activation='softmax', kernel_regularizer=l2(0.01)))  # Added L2 regularization
+model.add(Dense(7, activation='softmax', kernel_regularizer=l2(0.01))) 
 
 # Define a learning rate schedule function
 def lr_schedule(epoch, lr):
