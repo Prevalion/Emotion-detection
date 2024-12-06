@@ -9,8 +9,8 @@ from tensorflow.keras.optimizers import Adam # type: ignore
 from tensorflow.keras.layers import MaxPooling2D # type: ignore
 from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore 
 from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore  
-from tensorflow.keras.regularizers import l2  # Import L2 regularization #type: ignore
-from tensorflow.keras.callbacks import EarlyStopping  # Import EarlyStopping #type: ignore
+from tensorflow.keras.regularizers import l2  #type: ignore
+from tensorflow.keras.callbacks import EarlyStopping  #type: ignore
 
 # command line argument
 ap = argparse.ArgumentParser()
@@ -27,7 +27,7 @@ def plot_model_history(model_history):
     axs[0].set_title('Model Accuracy')
     axs[0].set_ylabel('Accuracy')
     axs[0].set_xlabel('Epoch')
-    axs[0].set_xticks(np.arange(1, len(model_history.history['accuracy']) + 1, len(model_history.history['accuracy']) // 10))  # Corrected line
+    axs[0].set_xticks(np.arange(1, len(model_history.history['accuracy']) + 1, len(model_history.history['accuracy']) // 10)) 
     axs[0].legend(['train', 'val'], loc='best')
 
     # summarize history for loss
@@ -36,7 +36,7 @@ def plot_model_history(model_history):
     axs[1].set_title('Model Loss')
     axs[1].set_ylabel('Loss')
     axs[1].set_xlabel('Epoch')
-    axs[1].set_xticks(np.arange(1, len(model_history.history['loss']) + 1, len(model_history.history['loss']) // 10))  # Corrected line
+    axs[1].set_xticks(np.arange(1, len(model_history.history['loss']) + 1, len(model_history.history['loss']) // 10))  
     axs[1].legend(['train', 'val'], loc='best')
 
     fig.savefig('plot.png')
