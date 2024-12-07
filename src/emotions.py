@@ -1,16 +1,14 @@
+
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
 import cv2
 from tensorflow.keras.models import Sequential # type: ignore
-from tensorflow.keras.layers import Dense, Dropout, Flatten # type: ignore
-from tensorflow.keras.layers import Conv2D # type: ignore
+from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D# type: ignore
 from tensorflow.keras.optimizers import Adam # type: ignore
-from tensorflow.keras.layers import MaxPooling2D # type: ignore
 from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore 
-from tensorflow.keras.callbacks import LearningRateScheduler # type: ignore  
+from tensorflow.keras.callbacks import LearningRateScheduler, EarlyStopping # type: ignore  
 from tensorflow.keras.regularizers import l2  #type: ignore
-from tensorflow.keras.callbacks import EarlyStopping  #type: ignore
 
 # command line argument
 ap = argparse.ArgumentParser()
