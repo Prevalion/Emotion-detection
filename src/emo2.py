@@ -1,13 +1,14 @@
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
 import argparse
 import matplotlib.pyplot as plt
 import cv2
-from tensorflow.keras.models import Sequential # type: ignore
-from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D# type: ignore
-from tensorflow.keras.optimizers import Adam # type: ignore
-from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore 
-from tensorflow.keras.callbacks import LearningRateScheduler, EarlyStopping # type: ignore  
-from tensorflow.keras.regularizers import l2  #type: ignore
+import torch.nn.functional as F
+from tqdm import tqdm  # Import tqdm for progress bar
 
 # command line argument
 ap = argparse.ArgumentParser()
@@ -47,78 +48,68 @@ num_val = 27319
 batch_size = 300 
 num_epoch = 100
 
-train_datagen = ImageDataGenerator(rescale=1./255)
-val_datagen = ImageDataGenerator(rescale=1./255)
+# Define the model using PyTorch
+class EmotionModel(nn.Module):
+    def __init__(self):
+        super(EmotionModel, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.dropout = nn.Dropout(0.25)
+        self.fc1 = nn.Linear(64 * 10 * 10, 1024)
+        self.fc2 = nn.Linear(1024, 7)
 
-train_generator = train_datagen.flow_from_directory(
-        train_dir,
-        target_size=(48,48),
-        batch_size=batch_size,
-        color_mode="grayscale",
-        class_mode='categorical'
-        )
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.dropout(x)
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.dropout(x)
+        x = x.view(-1, 64 * 10 * 10)
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
 
-validation_generator = val_datagen.flow_from_directory(
-        val_dir,
-        target_size=(48,48),
-        batch_size=batch_size,
-        color_mode="grayscale",
-        class_mode='categorical'
-        )
+# Replace ImageDataGenerator with PyTorch DataLoader
+transform = transforms.Compose([
+    transforms.Grayscale(),
+    transforms.Resize((48, 48)),
+    transforms.ToTensor(),
+])
 
-# Ensure steps_per_epoch is calculated correctly
-num_train = train_generator.samples  
-num_val = validation_generator.samples  
-steps_per_epoch = num_train // batch_size 
-validation_steps = num_val // batch_size 
+train_dataset = datasets.ImageFolder(root=train_dir, transform=transform)
+val_dataset = datasets.ImageFolder(root=val_dir, transform=transform)
+
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 # Create the model
-model = Sequential()
-
-model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Flatten())
-model.add(Dense(1024, activation='relu', kernel_regularizer=l2(0.01))) 
-model.add(Dropout(0.5))
-model.add(Dense(7, activation='softmax', kernel_regularizer=l2(0.01))) 
-
-# Define a learning rate schedule function
-def lr_schedule(epoch, lr):
-    decay_rate = 0.1
-    decay_step = 10
-    if epoch % decay_step == 0 and epoch:
-        return lr * decay_rate
-    return lr
+model = EmotionModel()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.00005)
 
 if mode == "train":
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00005), metrics=['accuracy'])  
-    lr_scheduler = LearningRateScheduler(lr_schedule)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    model_info = model.fit(
-            train_generator,
-            steps_per_epoch=steps_per_epoch, 
-            epochs=num_epoch,
-            validation_data=validation_generator,
-            validation_steps=validation_steps, 
-            callbacks=[lr_scheduler, early_stopping]) 
-    plot_model_history(model_info)
-    model.save_weights('model.weights.h5')  
+    model.train()
+    for epoch in range(num_epoch):
+        # Wrap the training loader with tqdm for progress bar
+        with tqdm(total=len(train_loader), desc=f'Epoch {epoch + 1}/{num_epoch}', unit='batch') as pbar:
+            for images, labels in train_loader:
+                optimizer.zero_grad()
+                outputs = model(images)
+                loss = criterion(outputs, labels)
+                loss.backward()
+                optimizer.step()
+                
+                # Update the progress bar
+                pbar.set_postfix(loss=loss.item())
+                pbar.update(1)  # Increment the progress bar by 1
+    # Save the model
+    torch.save(model.state_dict(), 'model.pth')
 
 # emotions will be displayed on your face from the webcam feed
 elif mode == "display":
-    model.load_weights('model.weights.h5')
-
+    model.load_state_dict(torch.load('model.pth'))
+    model.eval()
     # prevents openCL usage and unnecessary logging messages
     cv2.ocl.setUseOpenCL(False)
 
