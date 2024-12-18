@@ -8,7 +8,7 @@ import argparse
 import matplotlib.pyplot as plt
 import cv2
 import torch.nn.functional as F
-from tqdm import tqdm  # Import tqdm for progress bar
+from tqdm import tqdm 
 
 # command line argument
 ap = argparse.ArgumentParser()
