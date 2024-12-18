@@ -48,7 +48,8 @@ num_val = 27319
 batch_size = 300
 num_epoch = 100
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Set device to GPU if available, otherwise use CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  
 
 # Define the model using PyTorch
 class EmotionModel(nn.Module):
